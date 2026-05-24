@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menu_alert" android:title="🔔 設定提醒" android:showAsAction="never"/>
+    <item android:id="@+id/menu_webview" android:title="📰 財經資訊" android:showAsAction="never"/>
+    <item android:id="@+id/menu_history" android:title="📋 歷史紀錄" android:showAsAction="never"/>
+</menu>

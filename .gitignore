@@ -1,0 +1,30 @@
+# Android / Gradle
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+build/
+app/build/
+captures/
+.externalNativeBuild
+.cxx
+
+# Firebase 敏感檔案（重要！不要上傳）
+app/google-services.json
+
+# Log files
+*.log
+
+# OS generated files
+Thumbs.db
+.DS_Store
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android Studio
+*.apk
+*.aab
+*.ap_
