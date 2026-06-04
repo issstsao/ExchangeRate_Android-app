@@ -136,6 +136,13 @@ if (acceleration > 12.0f) {
 
 ---
 
+### 功能六：匯率走勢圖表（ChartActivity）
+
+* 導入 MPAndroidChart 套件，實作 LineChart 折線圖。
+* 將歷史匯率數據轉換為圖表資料點 (Entry)，提供使用者直觀的趨勢視覺化分析。
+
+---
+
 ## 開發環境與主要套件
 
 * **IDE**：Android Studio Ladybug
