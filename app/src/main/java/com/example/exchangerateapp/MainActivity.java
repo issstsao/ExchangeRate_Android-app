@@ -34,9 +34,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private Spinner spinnerFrom, spinnerTo;
     private EditText etAmount;
-    private Button btnConvert, btnSwap;
+    private Button btnConvert, btnSwap, btnChart; // 這裡新增了 btnChart 變數
     private TextView tvResult, tvRate, tvLastUpdate;
-    private ImageButton btnFavorite; // 新增最愛按鈕變數
+    private ImageButton btnFavorite;
 
     private SensorManager sensorManager;
     private long lastShakeTime = 0;
@@ -65,13 +65,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         initViews();
         setupSpinners();
-        setupFavoriteButton(); // 呼叫新增的最愛按鈕綁定方法
+        setupFavoriteButton();
         api = RetrofitClient.getInstance().create(ExchangeRateApi.class);
 
         loadLastCurrencies();
 
         btnConvert.setOnClickListener(v -> convertCurrency());
         btnSwap.setOnClickListener(v -> swapCurrencies());
+
+        // 新增：綁定 btnChart 的點擊跳轉事件
+        btnChart.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ChartActivity.class);
+            startActivity(intent);
+        });
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
@@ -84,10 +90,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         etAmount = findViewById(R.id.etAmount);
         btnConvert = findViewById(R.id.btnConvert);
         btnSwap = findViewById(R.id.btnSwap);
+        btnChart = findViewById(R.id.btnChart); // 新增這行來綁定 UI 元件
         tvResult = findViewById(R.id.tvResult);
         tvRate = findViewById(R.id.tvRate);
         tvLastUpdate = findViewById(R.id.tvLastUpdate);
-        btnFavorite = findViewById(R.id.btnFavorite); // 初始化按鈕
+        btnFavorite = findViewById(R.id.btnFavorite);
     }
 
     // 整合 SharedPreferences 的新版 Spinner 設定

@@ -91,6 +91,13 @@
                         android:src="@android:drawable/btn_star" />
                 </LinearLayout>
 
+                <Button
+                    android:id="@+id/btnChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📉 查看 7 天匯率走勢圖"
+                    android:layout_marginTop="8dp"/>
+
                 <TextView
                     android:id="@+id/tvResult"
                     android:layout_width="match_parent"
@@ -116,6 +123,7 @@
                     android:textSize="12sp"
                     android:gravity="center"
                     android:textColor="@color/text_hint"/>
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
