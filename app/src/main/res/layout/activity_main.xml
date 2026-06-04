@@ -80,6 +80,15 @@
                         android:layout_marginStart="12dp"
                         android:text="立即換算"
                         android:backgroundTint="@color/primary"/>
+
+                    <ImageButton
+                        android:id="@+id/btnFavorite"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:drawable/btn_star_big_on"
+                        android:backgroundTint="#FFEB3B"
+                        android:contentDescription="加入最愛"
+                        android:src="@android:drawable/btn_star" />
                 </LinearLayout>
 
                 <TextView

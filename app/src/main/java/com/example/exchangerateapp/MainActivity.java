@@ -2,6 +2,7 @@ package com.example.exchangerateapp;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -12,14 +13,18 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.*;
-        import androidx.appcompat.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
 import com.example.exchangerateapp.api.*;
-        import com.example.exchangerateapp.model.*;
-        import com.example.exchangerateapp.utils.*;
-        import retrofit2.Call;
+import com.example.exchangerateapp.model.*;
+import com.example.exchangerateapp.utils.*;
+
+import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -31,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private EditText etAmount;
     private Button btnConvert, btnSwap;
     private TextView tvResult, tvRate, tvLastUpdate;
+    private ImageButton btnFavorite; // 新增最愛按鈕變數
 
     private SensorManager sensorManager;
     private long lastShakeTime = 0;
@@ -59,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         initViews();
         setupSpinners();
+        setupFavoriteButton(); // 呼叫新增的最愛按鈕綁定方法
         api = RetrofitClient.getInstance().create(ExchangeRateApi.class);
 
         loadLastCurrencies();
@@ -80,25 +87,93 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         tvResult = findViewById(R.id.tvResult);
         tvRate = findViewById(R.id.tvRate);
         tvLastUpdate = findViewById(R.id.tvLastUpdate);
+        btnFavorite = findViewById(R.id.btnFavorite); // 初始化按鈕
     }
 
+    // 整合 SharedPreferences 的新版 Spinner 設定
     private void setupSpinners() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, currencies);
+        SharedPreferences sharedPrefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        Set<String> favorites = sharedPrefs.getStringSet("favorites", new HashSet<>());
+        List<String> currencyList = new ArrayList<>();
+
+        // 先加入最愛
+        for (String fav : favorites) {
+            currencyList.add("⭐ " + fav);
+        }
+
+        // 再加入非最愛
+        for (String currency : currencies) {
+            if (!favorites.contains(currency)) {
+                currencyList.add(currency);
+            }
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, currencyList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
         spinnerFrom.setAdapter(adapter);
         spinnerTo.setAdapter(adapter);
     }
 
+    // 新增最愛按鈕的點擊邏輯
+    private void setupFavoriteButton() {
+        if (btnFavorite != null) {
+            btnFavorite.setOnClickListener(v -> {
+                String selectedCurrency = spinnerFrom.getSelectedItem().toString().replace("⭐ ", "");
+                SharedPreferences sharedPrefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                Set<String> favorites = new HashSet<>(sharedPrefs.getStringSet("favorites", new HashSet<>()));
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+
+                if (favorites.contains(selectedCurrency)) {
+                    favorites.remove(selectedCurrency); // 若已存在則取消最愛
+                    Toast.makeText(this, "已移除最愛", Toast.LENGTH_SHORT).show();
+                } else {
+                    favorites.add(selectedCurrency);    // 若不存在則加入最愛
+                    Toast.makeText(this, "已加入最愛", Toast.LENGTH_SHORT).show();
+                }
+
+                editor.putStringSet("favorites", favorites);
+                editor.apply();
+
+                // 重新載入 Spinner 以更新順序，並套用原來的選擇
+                setupSpinners();
+                loadLastCurrencies();
+            });
+        }
+    }
+
+    // 更新以動態尋找 Index 的方法，避免因為加入最愛而錯位
     private void loadLastCurrencies() {
-        int fromIndex = Arrays.asList(currencies).indexOf(prefs.getLastFrom());
-        int toIndex = Arrays.asList(currencies).indexOf(prefs.getLastTo());
-        spinnerFrom.setSelection(fromIndex >= 0 ? fromIndex : 0);
-        spinnerTo.setSelection(toIndex >= 0 ? toIndex : 1); // 預設 TWD
+        String lastFrom = prefs.getLastFrom();
+        String lastTo = prefs.getLastTo();
+        setSpinnerSelection(spinnerFrom, lastFrom, 0);
+        setSpinnerSelection(spinnerTo, lastTo, 1);
+    }
+
+    // 輔助方法：根據貨幣字串找尋 Adapter 內的正確 Index
+    private void setSpinnerSelection(Spinner targetSpinner, String targetCurrency, int defaultIndex) {
+        if (targetCurrency == null) {
+            targetSpinner.setSelection(defaultIndex);
+            return;
+        }
+
+        ArrayAdapter<String> adapter = (ArrayAdapter<String>) targetSpinner.getAdapter();
+        if (adapter != null) {
+            for (int i = 0; i < adapter.getCount(); i++) {
+                String item = adapter.getItem(i);
+                if (item != null && item.replace("⭐ ", "").equals(targetCurrency)) {
+                    targetSpinner.setSelection(i);
+                    return;
+                }
+            }
+        }
+        targetSpinner.setSelection(defaultIndex);
     }
 
     private void convertCurrency() {
-        String from = spinnerFrom.getSelectedItem().toString();
-        String to = spinnerTo.getSelectedItem().toString();
+        // 重要：必須去掉 "⭐ " 以防 API 吃不到正確幣值
+        String from = spinnerFrom.getSelectedItem().toString().replace("⭐ ", "");
+        String to = spinnerTo.getSelectedItem().toString().replace("⭐ ", "");
         String amountStr = etAmount.getText().toString().trim();
 
         Log.d(TAG, "換算請求: " + from + " → " + to + " 金額=" + amountStr);
