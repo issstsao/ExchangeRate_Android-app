@@ -6,12 +6,13 @@
 ---
 ## 專案特色
 
-* **即時匯率精準換算**：支援 16 種常用貨幣，透過 Retrofit 2 + Gson 串接第三方 API (open.er-api.com) 提供零時差計算。限制輸入格式 (numberDecimal) 確保金流數據正確。
-* **背景監控與主動推播**：導入 WorkManager 實作背景自動排程比對，達標時即時觸發 Android Notification，讓使用者無需開啟 App 也能掌握最佳換匯先機。
-* **財經資訊無縫整合**：內建 WebView 模組嵌入財經新聞與即時匯率看板（如台灣銀行網頁），避免跳轉外部瀏覽器造成的體驗中斷。
+* **即時匯率精準換算**：支援 16 種常用貨幣，透過 Retrofit 2 + Gson 串接第三方 API (open.er-api.com) 提供零時差計算。限制輸入格式確保金流數據正確。
+* **個人化最愛貨幣**：一鍵將常用貨幣加入最愛（標示 ⭐），自動置頂於選擇清單，省去繁瑣的查找時間，打造專屬換匯體驗。
+* **歷史走勢視覺化**：整合 MPAndroidChart 繪製匯率走勢線圖，直觀呈現 7 天/30 天的貨幣波動趨勢，輔助判斷最佳換匯時機。
+* **背景監控與主動推播**：導入 WorkManager 實作背景自動排程比對，達標時即時觸發 Android Notification，無需開啟 App 也能掌握最佳換匯先機。
+* **財經資訊無縫整合**：內建 WebView 模組嵌入財經新聞與即時匯率看板，避免跳轉外部瀏覽器造成的體驗中斷。
 * **直覺化硬體互動**：結合手機感測器 (Accelerometer)，實作「搖晃手機即清空所有輸入資料與結果」，提供直覺的 Reset 體驗。
-* **雲端大數據追蹤**：整合 Firebase Firestore，將轉換紀錄與關注貨幣同步至雲端，為未來的個人化匯率趨勢分析奠定基礎。
-
+* **雲端大數據追蹤**：整合 Firebase Firestore，將轉換紀錄同步至雲端，為未來的個人化匯率趨勢分析奠定基礎。
 
 ---
 ## 專案架構
@@ -28,6 +29,7 @@ exchangerateapp/
 │   │   │   ├── worker/                     ← WorkManager 背景任務
 │   │   │   ├── utils/                      ← SharedPreferences, Firebase 等工具類別
 │   │   │   ├── MainActivity.java
+│   │   │   ├── ChartActivity.java          ← 匯率走勢圖表頁面
 │   │   │   ├── AlertActivity.java
 │   │   │   ├── WebViewActivity.java
 │   │   │   └── HistoryActivity.java
