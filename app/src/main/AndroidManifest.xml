@@ -20,7 +20,7 @@
         android:theme="@style/Theme.ExchangeRateApp"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".activity_chart"
+            android:name=".ChartActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
@@ -44,7 +44,6 @@
             android:name=".HistoryActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
-        <activity android:name=".ChartActivity" />
     </application>
 
 </manifest>
