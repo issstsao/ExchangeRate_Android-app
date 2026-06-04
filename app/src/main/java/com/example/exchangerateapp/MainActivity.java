@@ -75,7 +75,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         // 新增：綁定 btnChart 的點擊跳轉事件
         btnChart.setOnClickListener(v -> {
+            String fromCurrency = spinnerFrom.getSelectedItem().toString().replace("⭐ ", "");
+            String toCurrency = spinnerTo.getSelectedItem().toString().replace("⭐ ", "");
+
             Intent intent = new Intent(MainActivity.this, ChartActivity.class);
+            intent.putExtra("FROM_CURRENCY", fromCurrency);
+            intent.putExtra("TO_CURRENCY", toCurrency);
             startActivity(intent);
         });
 
