@@ -105,6 +105,7 @@ exchangerateapp/
 ### 功能六：動態購買力指標 (TWD 價值基準)
 - **嚴謹資產邏輯**：打破傳統工具只看「輸入面額」的盲點。系統會在背景自動將任意貨幣透過交叉匯率轉換為「等值新台幣 (TWD)」作為統一基準。
 - **動態級距顯示**：依照換算後的真實資產總值，動態切換四個級距顯示對應的趣味購買力卡片
+- 
 | 級距 | 條件 (等值台幣) | 顯示指標物品 |
 | :--- | :--- | :--- |
 | **隱藏** | `< 50 元` | (無，隱藏卡片防呆，避免出現 0.01 杯珍奶) |
@@ -125,7 +126,7 @@ exchangerateapp/
 ## 開發環境與主要套件
 
 * **IDE**：Android Studio Ladybug
-* **語言**：純 Java
+* **語言**：Java
 * **Min / Target SDK**：24 / 35
 * **主要依賴**：Retrofit 2, Gson, Firebase Firestore, WorkManager, MPAndroidChart, Material Components
 
