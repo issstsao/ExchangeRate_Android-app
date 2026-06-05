@@ -209,31 +209,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 彩蛋：百萬富翁「黃金彩帶雨」特效觸發
-        if (amount >= 1000000 && viewKonfetti != null) {
-            Toast.makeText(this, "🎉 財富自由啦！！！", Toast.LENGTH_LONG).show();
+        // 注意：我們把原本放在這裡的「百萬特效觸發」拿掉了，
+        // 因為我們要等 API 回傳匯率後，計算出「實際台幣價值」再來判斷是否財富自由。
 
-            // 觸發純程式碼生成的彩帶特效
-            viewKonfetti.build()
-                    .addColors(
-                            android.graphics.Color.YELLOW,
-                            android.graphics.Color.parseColor("#FFD700"), // 金色
-                            android.graphics.Color.parseColor("#FFA500")  // 橘金色
-                    )
-                    .setDirection(0.0, 359.0) // 360 度四面八方噴射
-                    .setSpeed(1f, 5f)
-                    .setFadeOutEnabled(true)
-                    .setTimeToLive(2000L) // 彩帶在螢幕上存活時間
-                    .addShapes(
-                            nl.dionsegijn.konfetti.models.Shape.Square.INSTANCE,
-                            nl.dionsegijn.konfetti.models.Shape.Circle.INSTANCE
-                    )
-                    .addSizes(new nl.dionsegijn.konfetti.models.Size(12, 5f))
-                    .setPosition(-50f, viewKonfetti.getWidth() + 50f, -50f, -50f) // 從上方落下
-                    .streamFor(300, 5000L); // 產生 300 個彩帶，持續下雨 5 秒鐘
-        }
-
-        // 每次重新換算時，先將彩蛋訊息重置
         easterEggMessage = "趨勢分析中，請稍後再試 🔍";
 
         api.getRates(from).enqueue(new Callback<ExchangeResponse>() {
@@ -246,14 +224,66 @@ public class MainActivity extends AppCompatActivity {
                     if (rate != null) {
                         double result = amount * rate;
 
+                        // 取出台幣匯率作為統一價值基準
                         Double twdRate = rates.get("TWD");
-                        if (twdRate != null && llFunFacts != null) {
-                            double amountInTwd = amount * (twdRate / rates.get(from));
-                            int priceBigMac = 75, priceBoba = 50, priceUSJ = 2000;
-                            tvFunFact1.setText(String.format(Locale.getDefault(), "🍔 ≈ %.1f 個大麥克", amountInTwd / priceBigMac));
-                            tvFunFact2.setText(String.format(Locale.getDefault(), "🧋 ≈ %.1f 杯五十嵐一號", amountInTwd / priceBoba));
-                            tvFunFact3.setText(String.format(Locale.getDefault(), "🎢 ≈ %.1f 張環球影城門票", amountInTwd / priceUSJ));
-                            llFunFacts.setVisibility(View.VISIBLE);
+                        if (twdRate != null) {
+                            // 計算這筆錢的「實際台幣價值」
+                            double a = amount * (twdRate / rates.get(from));
+
+                            // 1. 財富自由特效：實際價值 >= 一百萬台幣才觸發
+                            if (a >= 1000000 && viewKonfetti != null) {
+                                Toast.makeText(MainActivity.this, "🎉 真正的財富自由啦！！！", Toast.LENGTH_LONG).show();
+                                viewKonfetti.build()
+                                        .addColors(
+                                                android.graphics.Color.YELLOW,
+                                                android.graphics.Color.parseColor("#FFD700"),
+                                                android.graphics.Color.parseColor("#FFA500")
+                                        )
+                                        .setDirection(0.0, 359.0)
+                                        .setSpeed(1f, 5f)
+                                        .setFadeOutEnabled(true)
+                                        .setTimeToLive(2000L)
+                                        .addShapes(
+                                                nl.dionsegijn.konfetti.models.Shape.Square.INSTANCE,
+                                                nl.dionsegijn.konfetti.models.Shape.Circle.INSTANCE
+                                        )
+                                        .addSizes(new nl.dionsegijn.konfetti.models.Size(12, 5f))
+                                        .setPosition(-50f, viewKonfetti.getWidth() + 50f, -50f, -50f)
+                                        .streamFor(300, 5000L);
+                            }
+
+                            // 2. 動態資產級距判斷
+                            if (a < 50) {
+                                // 金額過小，什麼都買不起，隱藏卡片
+                                if (llFunFacts != null) llFunFacts.setVisibility(View.GONE);
+                            } else if (llFunFacts != null) {
+                                if (a < 10000) {
+                                    // 平民級距
+                                    int b = 75;  // 大麥克
+                                    int c = 50;  // 珍奶
+                                    int d = 300; // 電影票
+                                    tvFunFact1.setText(String.format(Locale.getDefault(), "🍔 ≈ %.1f 個大麥克", a / b));
+                                    tvFunFact2.setText(String.format(Locale.getDefault(), "🧋 ≈ %.1f 杯五十嵐一號", a / c));
+                                    tvFunFact3.setText(String.format(Locale.getDefault(), "🎬 ≈ %.1f 張電影票", a / d));
+                                } else if (a < 1000000) {
+                                    // 小資級距
+                                    int e = 2000;  // 環球影城門票
+                                    int f = 30000; // 最新 iPhone
+                                    int g = 80000; // 全新機車
+                                    tvFunFact1.setText(String.format(Locale.getDefault(), "🎢 ≈ %.1f 張環球影城門票", a / e));
+                                    tvFunFact2.setText(String.format(Locale.getDefault(), "📱 ≈ %.1f 支最新 iPhone", a / f));
+                                    tvFunFact3.setText(String.format(Locale.getDefault(), "🛵 ≈ %.1f 台全新機車", a / g));
+                                } else {
+                                    // 土豪級距
+                                    int h = 1500000; // 特斯拉 Model 3
+                                    int i = 350000;  // 勞力士黑水鬼
+                                    int j = 60000;   // 頂級和牛大餐
+                                    tvFunFact1.setText(String.format(Locale.getDefault(), "🚗 ≈ %.1f 台 Tesla Model 3", a / h));
+                                    tvFunFact2.setText(String.format(Locale.getDefault(), "⌚ ≈ %.1f 支勞力士黑水鬼", a / i));
+                                    tvFunFact3.setText(String.format(Locale.getDefault(), "🥩 ≈ %.1f 頓頂級和牛大餐", a / j));
+                                }
+                                llFunFacts.setVisibility(View.VISIBLE);
+                            }
                         }
 
                         tvResult.setText(String.format(Locale.getDefault(), "%.2f %s = %.2f %s", amount, from, result, to));
@@ -264,10 +294,7 @@ public class MainActivity extends AppCompatActivity {
                         firebaseHelper.saveConversionRecord(record);
                         prefs.saveLastCurrencies(from, to);
 
-                        // 觸發背景分析趨勢 (取得昨日匯率做比較)
                         analyzeTrendForEasterEgg(from, to, rate);
-
-                        Toast.makeText(MainActivity.this, "✅ 換算成功！", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(MainActivity.this, "無法取得匯率", Toast.LENGTH_SHORT).show();
                     }
