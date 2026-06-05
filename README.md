@@ -79,8 +79,8 @@ exchangerateapp/
 ## 詳細功能實作說明
 
 ### 功能一：即時匯率換算與最愛名單（MainActivity）
-1. 使用 Spinner 選擇來源與目標貨幣，結合 `SharedPreferences` 記憶使用者最愛貨幣並自動置頂排列。
-2. 點擊換算後呼叫 Retrofit 非同步請求進行換算，並提供「⇅ 互換」按鈕快速交換 Spinner 選項。
+- 使用 Spinner 選擇來源與目標貨幣，結合 `SharedPreferences` 記憶使用者最愛貨幣並自動置頂排列。 
+- 點擊換算後呼叫 Retrofit 非同步請求進行換算，並提供「⇅ 互換」按鈕快速交換 Spinner 選項。
 
 ### 功能二：背景監控與推播（AlertActivity + RateCheckWorker）
 - **自訂監控目標**：使用 `SharedPreferences` 儲存使用者設定的目標幣別與期望匯率。
