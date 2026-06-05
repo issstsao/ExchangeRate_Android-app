@@ -107,6 +107,8 @@
                     android:textStyle="bold"
                     android:gravity="center"/>
 
+
+
                 <TextView
                     android:id="@+id/tvRate"
                     android:layout_width="match_parent"
@@ -123,6 +125,44 @@
                     android:textSize="12sp"
                     android:gravity="center"
                     android:textColor="@color/text_hint"/>
+
+                <LinearLayout
+                    android:id="@+id/llFunFacts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="#FFF9C4"
+                    android:padding="16dp"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone"
+                    android:elevation="4dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💡 這些錢大概可以買..."
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/tvFunFact1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/tvFunFact2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:id="@+id/tvFunFact3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"/>
+                </LinearLayout>
+
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>

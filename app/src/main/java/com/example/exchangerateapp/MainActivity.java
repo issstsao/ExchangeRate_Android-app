@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -45,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ExchangeRateApi api;
     private PreferenceHelper prefs;
     private FirebaseHelper firebaseHelper;
+    private LinearLayout llFunFacts;
+    private TextView tvFunFact1, tvFunFact2, tvFunFact3;
 
     private String[] currencies = {"USD","TWD","JPY","EUR","GBP","CNY","HKD","KRW","SGD","AUD","CAD","CHF","MYR","THB","VND","PHP"};
 
@@ -100,6 +103,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         tvRate = findViewById(R.id.tvRate);
         tvLastUpdate = findViewById(R.id.tvLastUpdate);
         btnFavorite = findViewById(R.id.btnFavorite);
+        llFunFacts = findViewById(R.id.llFunFacts);
+        tvFunFact1 = findViewById(R.id.tvFunFact1);
+        tvFunFact2 = findViewById(R.id.tvFunFact2);
+        tvFunFact3 = findViewById(R.id.tvFunFact3);
     }
 
     // 整合 SharedPreferences 的新版 Spinner 設定
@@ -214,6 +221,24 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                     if (rate != null) {
                         double result = amount * rate;
+
+                        Double twdRate = rates.get("TWD");
+                        if (twdRate != null) {
+                            // 將輸入的金額先換算成台幣作為基準
+                            double amountInTwd = amount * (twdRate / rates.get(from)); // 計算台幣總值
+
+                            // 常見物價常數
+                            int priceBigMac = 75;
+                            int priceBoba = 50;
+                            int priceUSJ = 2000;
+
+                            tvFunFact1.setText(String.format(Locale.getDefault(), "🍔 ≈ %.1f 個大麥克", amountInTwd / priceBigMac));
+                            tvFunFact2.setText(String.format(Locale.getDefault(), "🧋 ≈ %.1f 杯五十嵐一號", amountInTwd / priceBoba));
+                            tvFunFact3.setText(String.format(Locale.getDefault(), "🎢 ≈ %.1f 張環球影城門票", amountInTwd / priceUSJ));
+
+                            llFunFacts.setVisibility(View.VISIBLE); // 顯示卡片
+                        }
+
                         tvResult.setText(String.format("%.2f %s = %.2f %s", amount, from, result, to));
                         tvRate.setText(String.format("1 %s = %.4f %s", from, rate, to));
                         tvLastUpdate.setText("更新時間: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN).format(new Date()));
