@@ -4,10 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -21,33 +17,37 @@ import androidx.core.app.ActivityCompat;
 import com.example.exchangerateapp.api.*;
 import com.example.exchangerateapp.model.*;
 import com.example.exchangerateapp.utils.*;
+import com.google.gson.JsonObject;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class MainActivity extends AppCompatActivity implements SensorEventListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "ExchangeRateApp";
 
     private Spinner spinnerFrom, spinnerTo;
     private EditText etAmount;
-    private Button btnConvert, btnSwap, btnChart; // 這裡新增了 btnChart 變數
+    private Button btnConvert, btnSwap, btnChart;
     private TextView tvResult, tvRate, tvLastUpdate;
     private ImageButton btnFavorite;
-
-    private SensorManager sensorManager;
-    private long lastShakeTime = 0;
-    private static final float SHAKE_THRESHOLD = 12.0f;
 
     private ExchangeRateApi api;
     private PreferenceHelper prefs;
     private FirebaseHelper firebaseHelper;
+
+    // 趣味卡片元件
     private LinearLayout llFunFacts;
     private TextView tvFunFact1, tvFunFact2, tvFunFact3;
+
+    // 儲存趨勢判斷後的彩蛋訊息
+    private String easterEggMessage = "請先進行換算，讓我為你分析最新趨勢 👀";
 
     private String[] currencies = {"USD","TWD","JPY","EUR","GBP","CNY","HKD","KRW","SGD","AUD","CAD","CHF","MYR","THB","VND","PHP"};
 
@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         btnConvert.setOnClickListener(v -> convertCurrency());
         btnSwap.setOnClickListener(v -> swapCurrencies());
 
-        // 新增：綁定 btnChart 的點擊跳轉事件
         btnChart.setOnClickListener(v -> {
             String fromCurrency = spinnerFrom.getSelectedItem().toString().replace("⭐ ", "");
             String toCurrency = spinnerTo.getSelectedItem().toString().replace("⭐ ", "");
@@ -87,7 +86,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             startActivity(intent);
         });
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        // 升級版：長按不清空資料，直接跳出根據趨勢判斷的嘲諷彩蛋
+        tvResult.setOnLongClickListener(v -> {
+            Toast.makeText(MainActivity.this, easterEggMessage, Toast.LENGTH_LONG).show();
+            return true;
+        });
 
         Log.d(TAG, "MainActivity 初始化完成");
     }
@@ -98,29 +101,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         etAmount = findViewById(R.id.etAmount);
         btnConvert = findViewById(R.id.btnConvert);
         btnSwap = findViewById(R.id.btnSwap);
-        btnChart = findViewById(R.id.btnChart); // 新增這行來綁定 UI 元件
+        btnChart = findViewById(R.id.btnChart);
         tvResult = findViewById(R.id.tvResult);
         tvRate = findViewById(R.id.tvRate);
         tvLastUpdate = findViewById(R.id.tvLastUpdate);
         btnFavorite = findViewById(R.id.btnFavorite);
+
         llFunFacts = findViewById(R.id.llFunFacts);
         tvFunFact1 = findViewById(R.id.tvFunFact1);
         tvFunFact2 = findViewById(R.id.tvFunFact2);
         tvFunFact3 = findViewById(R.id.tvFunFact3);
     }
 
-    // 整合 SharedPreferences 的新版 Spinner 設定
     private void setupSpinners() {
         SharedPreferences sharedPrefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         Set<String> favorites = sharedPrefs.getStringSet("favorites", new HashSet<>());
         List<String> currencyList = new ArrayList<>();
 
-        // 先加入最愛
         for (String fav : favorites) {
             currencyList.add("⭐ " + fav);
         }
 
-        // 再加入非最愛
         for (String currency : currencies) {
             if (!favorites.contains(currency)) {
                 currencyList.add(currency);
@@ -134,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         spinnerTo.setAdapter(adapter);
     }
 
-    // 新增最愛按鈕的點擊邏輯
     private void setupFavoriteButton() {
         if (btnFavorite != null) {
             btnFavorite.setOnClickListener(v -> {
@@ -144,24 +144,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 SharedPreferences.Editor editor = sharedPrefs.edit();
 
                 if (favorites.contains(selectedCurrency)) {
-                    favorites.remove(selectedCurrency); // 若已存在則取消最愛
+                    favorites.remove(selectedCurrency);
                     Toast.makeText(this, "已移除最愛", Toast.LENGTH_SHORT).show();
                 } else {
-                    favorites.add(selectedCurrency);    // 若不存在則加入最愛
+                    favorites.add(selectedCurrency);
                     Toast.makeText(this, "已加入最愛", Toast.LENGTH_SHORT).show();
                 }
 
                 editor.putStringSet("favorites", favorites);
                 editor.apply();
 
-                // 重新載入 Spinner 以更新順序，並套用原來的選擇
                 setupSpinners();
                 loadLastCurrencies();
             });
         }
     }
 
-    // 更新以動態尋找 Index 的方法，避免因為加入最愛而錯位
     private void loadLastCurrencies() {
         String lastFrom = prefs.getLastFrom();
         String lastTo = prefs.getLastTo();
@@ -169,7 +167,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setSpinnerSelection(spinnerTo, lastTo, 1);
     }
 
-    // 輔助方法：根據貨幣字串找尋 Adapter 內的正確 Index
     private void setSpinnerSelection(Spinner targetSpinner, String targetCurrency, int defaultIndex) {
         if (targetCurrency == null) {
             targetSpinner.setSelection(defaultIndex);
@@ -190,12 +187,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void convertCurrency() {
-        // 重要：必須去掉 "⭐ " 以防 API 吃不到正確幣值
         String from = spinnerFrom.getSelectedItem().toString().replace("⭐ ", "");
         String to = spinnerTo.getSelectedItem().toString().replace("⭐ ", "");
         String amountStr = etAmount.getText().toString().trim();
-
-        Log.d(TAG, "換算請求: " + from + " → " + to + " 金額=" + amountStr);
 
         if (amountStr.isEmpty()) {
             Toast.makeText(this, "請輸入金額", Toast.LENGTH_SHORT).show();
@@ -210,11 +204,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             return;
         }
 
+        // 每次重新換算時，先將彩蛋訊息重置
+        easterEggMessage = "趨勢分析中，請稍後再試 🔍";
+
         api.getRates(from).enqueue(new Callback<ExchangeResponse>() {
             @Override
             public void onResponse(Call<ExchangeResponse> call, Response<ExchangeResponse> response) {
-                Log.d(TAG, "API 回應碼: " + response.code());
-
                 if (response.isSuccessful() && response.body() != null) {
                     Map<String, Double> rates = response.body().getConversionRates();
                     Double rate = rates != null ? rates.get(to) : null;
@@ -223,44 +218,82 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         double result = amount * rate;
 
                         Double twdRate = rates.get("TWD");
-                        if (twdRate != null) {
-                            // 將輸入的金額先換算成台幣作為基準
-                            double amountInTwd = amount * (twdRate / rates.get(from)); // 計算台幣總值
-
-                            // 常見物價常數
-                            int priceBigMac = 75;
-                            int priceBoba = 50;
-                            int priceUSJ = 2000;
-
+                        if (twdRate != null && llFunFacts != null) {
+                            double amountInTwd = amount * (twdRate / rates.get(from));
+                            int priceBigMac = 75, priceBoba = 50, priceUSJ = 2000;
                             tvFunFact1.setText(String.format(Locale.getDefault(), "🍔 ≈ %.1f 個大麥克", amountInTwd / priceBigMac));
                             tvFunFact2.setText(String.format(Locale.getDefault(), "🧋 ≈ %.1f 杯五十嵐一號", amountInTwd / priceBoba));
                             tvFunFact3.setText(String.format(Locale.getDefault(), "🎢 ≈ %.1f 張環球影城門票", amountInTwd / priceUSJ));
-
-                            llFunFacts.setVisibility(View.VISIBLE); // 顯示卡片
+                            llFunFacts.setVisibility(View.VISIBLE);
                         }
 
-                        tvResult.setText(String.format("%.2f %s = %.2f %s", amount, from, result, to));
-                        tvRate.setText(String.format("1 %s = %.4f %s", from, rate, to));
+                        tvResult.setText(String.format(Locale.getDefault(), "%.2f %s = %.2f %s", amount, from, result, to));
+                        tvRate.setText(String.format(Locale.getDefault(), "1 %s = %.4f %s", from, rate, to));
                         tvLastUpdate.setText("更新時間: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN).format(new Date()));
 
                         ConversionRecord record = new ConversionRecord(from, to, amount, result, rate);
                         firebaseHelper.saveConversionRecord(record);
                         prefs.saveLastCurrencies(from, to);
 
+                        // 觸發背景分析趨勢 (取得昨日匯率做比較)
+                        analyzeTrendForEasterEgg(from, to, rate);
+
                         Toast.makeText(MainActivity.this, "✅ 換算成功！", Toast.LENGTH_SHORT).show();
-                        Log.d(TAG, "換算成功: " + result);
                     } else {
                         Toast.makeText(MainActivity.this, "無法取得匯率", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "API 請求失敗 (" + response.code() + ")", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "API 請求失敗", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ExchangeResponse> call, Throwable t) {
-                Log.e(TAG, "API 失敗", t);
-                Toast.makeText(MainActivity.this, "網路錯誤: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "網路錯誤", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // 專門用來分析趨勢以決定彩蛋文案的非同步方法
+    private void analyzeTrendForEasterEgg(String from, String to, double currentRate) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://cdn.jsdelivr.net/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        HistoryApi historyApi = retrofit.create(HistoryApi.class);
+
+        // 取得昨天的日期
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_YEAR, -1);
+        String yesterday = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(cal.getTime());
+
+        historyApi.getHistoricalRate(yesterday, from.toLowerCase()).enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    try {
+                        JsonObject ratesObj = response.body().getAsJsonObject(from.toLowerCase());
+                        if (ratesObj != null && ratesObj.has(to.toLowerCase())) {
+                            double yesterdayRate = ratesObj.get(to.toLowerCase()).getAsDouble();
+
+                            // 判斷趨勢並賦予情緒化文案
+                            if (currentRate < yesterdayRate) {
+                                easterEggMessage = "📉 " + to + " 正在下跌！大特價中，現在不買你要等到何時？";
+                            } else if (currentRate > yesterdayRate) {
+                                easterEggMessage = "📈 " + to + " 正在上漲！現在換可能有點虧，忍住你的雙手！";
+                            } else {
+                                easterEggMessage = "⚖️ " + to + " 匯率平如止水，跟你的錢包一樣毫無波動 😶";
+                            }
+                        }
+                    } catch (Exception e) {
+                        easterEggMessage = "🤔 趨勢分析中發生了一點小錯誤";
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                easterEggMessage = "📶 網路不給力，目前無法分析趨勢";
             }
         });
     }
@@ -286,43 +319,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         else if (id == R.id.menu_webview) startActivity(new Intent(this, WebViewActivity.class));
         else if (id == R.id.menu_history) startActivity(new Intent(this, HistoryActivity.class));
         return super.onOptionsItemSelected(item);
-    }
-
-    // Shake detection
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastShakeTime < 1500) return;
-
-            float x = event.values[0], y = event.values[1], z = event.values[2];
-            float acceleration = (float) Math.sqrt(x*x + y*y + z*z) - SensorManager.GRAVITY_EARTH;
-
-            if (acceleration > SHAKE_THRESHOLD) {
-                lastShakeTime = currentTime;
-                etAmount.setText("");
-                tvResult.setText("");
-                tvRate.setText("");
-                Toast.makeText(this, "🔄 已搖晃清除所有資料", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        sensorManager.unregisterListener(this);
     }
 }
