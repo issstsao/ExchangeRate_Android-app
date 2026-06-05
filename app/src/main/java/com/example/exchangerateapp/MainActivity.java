@@ -46,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout llFunFacts;
     private TextView tvFunFact1, tvFunFact2, tvFunFact3;
 
+    // 彩帶特效元件
+    private nl.dionsegijn.konfetti.KonfettiView viewKonfetti;
+
     // 儲存趨勢判斷後的彩蛋訊息
     private String easterEggMessage = "請先進行換算，讓我為你分析最新趨勢 👀";
 
@@ -111,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
         tvFunFact1 = findViewById(R.id.tvFunFact1);
         tvFunFact2 = findViewById(R.id.tvFunFact2);
         tvFunFact3 = findViewById(R.id.tvFunFact3);
+
+        viewKonfetti = findViewById(R.id.viewKonfetti);
     }
 
     private void setupSpinners() {
@@ -202,6 +207,30 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "金額格式錯誤", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        // 彩蛋：百萬富翁「黃金彩帶雨」特效觸發
+        if (amount >= 1000000 && viewKonfetti != null) {
+            Toast.makeText(this, "🎉 財富自由啦！！！", Toast.LENGTH_LONG).show();
+
+            // 觸發純程式碼生成的彩帶特效
+            viewKonfetti.build()
+                    .addColors(
+                            android.graphics.Color.YELLOW,
+                            android.graphics.Color.parseColor("#FFD700"), // 金色
+                            android.graphics.Color.parseColor("#FFA500")  // 橘金色
+                    )
+                    .setDirection(0.0, 359.0) // 360 度四面八方噴射
+                    .setSpeed(1f, 5f)
+                    .setFadeOutEnabled(true)
+                    .setTimeToLive(2000L) // 彩帶在螢幕上存活時間
+                    .addShapes(
+                            nl.dionsegijn.konfetti.models.Shape.Square.INSTANCE,
+                            nl.dionsegijn.konfetti.models.Shape.Circle.INSTANCE
+                    )
+                    .addSizes(new nl.dionsegijn.konfetti.models.Size(12, 5f))
+                    .setPosition(-50f, viewKonfetti.getWidth() + 50f, -50f, -50f) // 從上方落下
+                    .streamFor(300, 5000L); // 產生 300 個彩帶，持續下雨 5 秒鐘
         }
 
         // 每次重新換算時，先將彩蛋訊息重置

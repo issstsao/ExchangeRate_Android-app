@@ -47,4 +47,5 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation 'nl.dionsegijn:konfetti:1.3.2'   // 黃金彩帶庫
 }
