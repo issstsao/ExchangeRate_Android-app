@@ -87,7 +87,7 @@ exchangerateapp/
 - **背景自動排程**：導入 `WorkManager` 建立週期性任務，每 15 分鐘在背景透過 Retrofit 同步呼叫 (`.execute()`) 獲取最新 API 數據。同時完美支援 Android 13+ (SDK 33) 動態通知權限 (`POST_NOTIFICATIONS`) 請求。
 - **即時達標推播**：當最新匯率達到設定目標時，即時觸發 Android 8.0+ 支援的 Notification Channel 發送高優先級推播，讓使用者無需開啟 App 也能掌握最佳換匯時機。
 - **雙重 API 交叉比對**：達標後同步呼叫歷史 API 抓取 yesterdayRate（昨日歷史匯率）進行二次比對：
-- - 買進訊號：若 rate < yesterdayRate (達標且跌勢)，推播文案：「📉 跌到快趴在地上了！老闆，現在不買你要等到何時？」
+  - 買進訊號：若 rate < yesterdayRate (達標且跌勢)，推播文案：「📉 跌到快趴在地上了！老闆，現在不買你要等到何時？」
 
 ### 功能三：財經資訊瀏覽（WebViewActivity）
 * `TabLayout` 結合 `WebView`，快速切換台灣銀行、Google 財經、Yahoo 外匯。
