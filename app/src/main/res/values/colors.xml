@@ -7,4 +7,16 @@
     <color name="text_secondary">#546E7A</color>
     <color name="text_hint">#9E9E9E</color>
     <color name="error">#D32F2F</color>
+
+
+    <color name="fintech_light_bg">#F8F9FC</color>
+    <color name="fintech_light_surface">#FFFFFF</color>
+
+    <color name="fintech_premium_green">#00B074</color>
+
+    <color name="fintech_text_dark_primary">#1A202C</color>
+    <color name="fintech_text_dark_secondary">#718096</color>
+
+    <color name="fintech_light_grid">#E2E8F0</color>
+
 </resources>
